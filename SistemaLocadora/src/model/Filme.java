@@ -37,4 +37,11 @@ public abstract class Filme {
     public void setGenero(String genero) {
         this.genero = genero;
     }
+
+    @Override
+    public String toString() {
+        return "Título: " + titulo + "\n" +
+               "Ano: " + anoLancamento + "\n" +
+               "Gênero: " + genero;
+    }
 }

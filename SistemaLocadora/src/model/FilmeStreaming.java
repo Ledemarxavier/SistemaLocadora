@@ -34,4 +34,12 @@ public class FilmeStreaming extends Filme {
     public void setLink(String link) {
         this.link = link;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + "\n" +
+               "Tipo: Streaming\n" +
+               "Plataforma: " + plataforma + "\n" +
+               "Link: " + link;
+    }
 }

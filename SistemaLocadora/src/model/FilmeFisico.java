@@ -35,4 +35,12 @@ public class FilmeFisico extends Filme {
     public void setTipoMidia(String tipoMidia) {
         this.tipoMidia = tipoMidia;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + "\n" +
+               "Tipo: Físico\n" +
+               "Nº do Disco: " + numeroDisco + "\n" +
+               "Mídia: " + tipoMidia;
+    }
 }

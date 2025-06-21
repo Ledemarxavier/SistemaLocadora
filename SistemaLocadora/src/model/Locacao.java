@@ -46,4 +46,13 @@ public class Locacao {
     public void setDataDevolucao(LocalDate dataDevolucao) {
         this.dataDevolucao = dataDevolucao;
     }
+
+    @Override
+    public String toString() {
+        return "== Locação ==\n" +
+               "Cliente:\n" + cliente.toString() + "\n\n" +
+               "Filme:\n" + filme.toString() + "\n\n" +
+               "Data da Locação: " + dataLocacao + "\n" +
+               "Data de Devolução: " + dataDevolucao;
+    }
 }

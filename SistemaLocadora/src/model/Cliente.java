@@ -44,4 +44,12 @@ public class Cliente {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    @Override
+    public String toString() {
+        return "Nome: " + nome + "\n" +
+               "CPF: " + cpf + "\n" +
+               "Telefone: " + telefone + "\n" +
+               "Email: " + email;
+    }
 }
