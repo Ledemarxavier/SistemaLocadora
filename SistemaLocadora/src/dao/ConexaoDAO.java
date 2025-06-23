@@ -3,6 +3,7 @@ package dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class ConexaoDAO {
     private static final String URL = "jdbc:mysql://localhost:3306/locadora_filmes";
@@ -25,6 +26,13 @@ public class ConexaoDAO {
             } catch (SQLException e) {
                 System.err.println("Erro ao fechar conexão: " + e.getMessage());
             }
+        }
+    }
+    
+    public static void executeUpdate(String sql) throws SQLException {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
         }
     }
 }

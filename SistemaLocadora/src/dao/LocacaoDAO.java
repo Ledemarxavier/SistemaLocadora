@@ -1,28 +1,28 @@
 package dao;
 
-import model.Locacao;
-import model.Cliente;
-import model.Filme;
-import model.FilmeFisico;
-import model.FilmeStreaming;
-
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import model.Cliente;
+import model.Filme;
+import model.FilmeFisico;
+import model.FilmeStreaming;
+import model.Locacao;
 
 public class LocacaoDAO {
     public void registrar(Locacao locacao) throws SQLException {
-        String sql = "INSERT INTO locacao (cliente_id, filme_id, data_locacao, data_devolucao) " +
-                     "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO locacao (cliente_cpf, filme_titulo, data_locacao, data_devolucao, status) " +
+                     "VALUES (?, ?, ?, ?, ?)";
         
         try (Connection conn = ConexaoDAO.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setInt(1, obterIdCliente(locacao.getCliente().getCpf()));
-            stmt.setInt(2, obterIdFilme(locacao.getFilme().getTitulo()));
+            stmt.setString(1, locacao.getCliente().getCpf());
+            stmt.setString(2, locacao.getFilme().getTitulo());
             stmt.setDate(3, Date.valueOf(locacao.getDataLocacao()));
             stmt.setDate(4, Date.valueOf(locacao.getDataDevolucao()));
+            stmt.setString(5, locacao.getStatus());
             
             stmt.executeUpdate();
         }
@@ -32,12 +32,11 @@ public class LocacaoDAO {
         List<Locacao> locacoes = new ArrayList<>();
         String sql = "SELECT l.*, c.nome, c.cpf, c.telefone, c.email, " +
                      "f.titulo, f.ano_lancamento, f.genero, f.tipo, " +
-                     "ff.numero_disco, ff.tipo_midia, fs.plataforma, fs.link " +
+                     "f.numero_disco, f.tipo_midia, f.plataforma, f.link " +
                      "FROM locacao l " +
-                     "JOIN cliente c ON l.cliente_id = c.id " +
-                     "JOIN filme f ON l.filme_id = f.id " +
-                     "LEFT JOIN filme_fisico ff ON f.id = ff.id " +
-                     "LEFT JOIN filme_streaming fs ON f.id = fs.id";
+                     "JOIN cliente c ON l.cliente_cpf = c.cpf " +
+                     "JOIN filme f ON l.filme_titulo = f.titulo " +
+                     "ORDER BY l.data_locacao DESC";
         
         try (Connection conn = ConexaoDAO.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -54,13 +53,12 @@ public class LocacaoDAO {
         List<Locacao> locacoes = new ArrayList<>();
         String sql = "SELECT l.*, c.nome, c.cpf, c.telefone, c.email, " +
                      "f.titulo, f.ano_lancamento, f.genero, f.tipo, " +
-                     "ff.numero_disco, ff.tipo_midia, fs.plataforma, fs.link " +
+                     "f.numero_disco, f.tipo_midia, f.plataforma, f.link " +
                      "FROM locacao l " +
-                     "JOIN cliente c ON l.cliente_id = c.id " +
-                     "JOIN filme f ON l.filme_id = f.id " +
-                     "LEFT JOIN filme_fisico ff ON f.id = ff.id " +
-                     "LEFT JOIN filme_streaming fs ON f.id = fs.id " +
-                     "WHERE c.cpf = ?";
+                     "JOIN cliente c ON l.cliente_cpf = c.cpf " +
+                     "JOIN filme f ON l.filme_titulo = f.titulo " +
+                     "WHERE c.cpf = ? " +
+                     "ORDER BY l.data_locacao DESC";
         
         try (Connection conn = ConexaoDAO.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -77,11 +75,8 @@ public class LocacaoDAO {
     
     public List<Filme> listarFilmesDisponiveis() throws SQLException {
         List<Filme> filmes = new ArrayList<>();
-        String sql = "SELECT f.*, ff.numero_disco, ff.tipo_midia, fs.plataforma, fs.link " +
-                     "FROM filme f " +
-                     "LEFT JOIN filme_fisico ff ON f.id = ff.id " +
-                     "LEFT JOIN filme_streaming fs ON f.id = fs.id " +
-                     "WHERE f.id NOT IN (SELECT filme_id FROM locacao WHERE data_devolucao > CURDATE())";
+        String sql = "SELECT f.* FROM filme f " +
+                     "WHERE f.titulo NOT IN (SELECT filme_titulo FROM locacao WHERE data_devolucao_real IS NULL)";
         
         try (Connection conn = ConexaoDAO.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -136,39 +131,10 @@ public class LocacaoDAO {
         // Criar locação
         LocalDate dataLocacao = rs.getDate("data_locacao").toLocalDate();
         LocalDate dataDevolucao = rs.getDate("data_devolucao").toLocalDate();
+        LocalDate dataDevolucaoReal = rs.getDate("data_devolucao_real") != null ? 
+            rs.getDate("data_devolucao_real").toLocalDate() : null;
+        String status = rs.getString("status");
         
-        return new Locacao(cliente, filme, dataLocacao, dataDevolucao);
-    }
-    
-    private int obterIdCliente(String cpf) throws SQLException {
-        String sql = "SELECT id FROM cliente WHERE cpf = ?";
-        
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, cpf);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            }
-        }
-        throw new SQLException("Cliente não encontrado");
-    }
-    
-    private int obterIdFilme(String titulo) throws SQLException {
-        String sql = "SELECT id FROM filme WHERE titulo = ?";
-        
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, titulo);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            }
-        }
-        throw new SQLException("Filme não encontrado");
+        return new Locacao(cliente, filme, dataLocacao, dataDevolucao, dataDevolucaoReal, status);
     }
 }

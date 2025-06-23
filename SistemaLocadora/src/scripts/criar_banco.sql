@@ -2,36 +2,22 @@
 CREATE DATABASE IF NOT EXISTS locadora_filmes;
 USE locadora_filmes;
 
--- Tabela filme (classe abstrata)
+-- Tabela filme
 CREATE TABLE IF NOT EXISTS filme (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titulo VARCHAR(100) NOT NULL,
+    titulo VARCHAR(100) PRIMARY KEY,
     ano_lancamento INT NOT NULL,
     genero VARCHAR(50) NOT NULL,
-    tipo ENUM('FISICO', 'STREAMING') NOT NULL
-);
-
--- Tabela filme_fisico
-CREATE TABLE IF NOT EXISTS filme_fisico (
-    id INT PRIMARY KEY,
-    numero_disco INT NOT NULL,
-    tipo_midia VARCHAR(20) NOT NULL,
-    FOREIGN KEY (id) REFERENCES filme(id) ON DELETE CASCADE
-);
-
--- Tabela filme_streaming
-CREATE TABLE IF NOT EXISTS filme_streaming (
-    id INT PRIMARY KEY,
-    plataforma VARCHAR(50) NOT NULL,
-    link VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id) REFERENCES filme(id) ON DELETE CASCADE
+    tipo ENUM('FISICO', 'STREAMING') NOT NULL,
+    numero_disco INT,
+    tipo_midia VARCHAR(20),
+    plataforma VARCHAR(50),
+    link VARCHAR(255)
 );
 
 -- Tabela cliente
 CREATE TABLE IF NOT EXISTS cliente (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    cpf VARCHAR(14) PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
     telefone VARCHAR(15),
     email VARCHAR(100)
 );
@@ -39,10 +25,18 @@ CREATE TABLE IF NOT EXISTS cliente (
 -- Tabela locacao
 CREATE TABLE IF NOT EXISTS locacao (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    cliente_id INT NOT NULL,
-    filme_id INT NOT NULL,
+    cliente_cpf VARCHAR(14) NOT NULL,
+    filme_titulo VARCHAR(100) NOT NULL,
     data_locacao DATE NOT NULL,
     data_devolucao DATE NOT NULL,
-    FOREIGN KEY (cliente_id) REFERENCES cliente(id),
-    FOREIGN KEY (filme_id) REFERENCES filme(id)
+    data_devolucao_real DATE NULL,
+    status VARCHAR(20) DEFAULT 'ATIVA',
+    FOREIGN KEY (cliente_cpf) REFERENCES cliente(cpf) ON DELETE CASCADE,
+    FOREIGN KEY (filme_titulo) REFERENCES filme(titulo) ON DELETE CASCADE
 );
+
+-- Índices para melhor performance
+CREATE INDEX idx_locacao_cliente ON locacao(cliente_cpf);
+CREATE INDEX idx_locacao_filme ON locacao(filme_titulo);
+CREATE INDEX idx_locacao_status ON locacao(status);
+CREATE INDEX idx_locacao_data_devolucao ON locacao(data_devolucao_real);
