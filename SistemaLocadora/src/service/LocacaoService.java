@@ -43,11 +43,12 @@ public class LocacaoService {
     public List<Locacao> listarLocacoesAtivas() throws SQLException {
         List<Locacao> locacoesAtivas = new ArrayList<>();
         String sql = "SELECT l.*, c.nome, c.cpf, c.telefone, c.email, " +
-                    "f.titulo, f.ano_lancamento, f.genero, f.tipo " +
+                    "f.titulo, f.ano_lancamento, f.genero, f.tipo, " +
+                    "f.numero_disco, f.tipo_midia, f.plataforma, f.link " +
                     "FROM locacao l " +
                     "JOIN cliente c ON l.cliente_cpf = c.cpf " +
                     "JOIN filme f ON l.filme_titulo = f.titulo " +
-                    "WHERE l.data_devolucao_real IS NULL " +
+                    "WHERE l.status = 'ATIVA' " +
                     "ORDER BY l.data_locacao DESC";
         
         try (Connection conn = ConexaoDAO.getConnection();
@@ -118,7 +119,7 @@ public class LocacaoService {
     }
     
     public void verificarEstruturaBanco() throws SQLException {
-        // Verificar se a coluna status existe na tabela locacao
+        
         String checkColumnSql = "SHOW COLUMNS FROM locacao LIKE 'status'";
         boolean statusColumnExists = false;
         
@@ -130,7 +131,7 @@ public class LocacaoService {
         }
         
         if (!statusColumnExists) {
-            // Adicionar coluna status se não existir
+            
             String addColumnSql = "ALTER TABLE locacao ADD COLUMN status VARCHAR(20) DEFAULT 'ATIVA'";
             try (Connection conn = ConexaoDAO.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(addColumnSql)) {
@@ -138,7 +139,7 @@ public class LocacaoService {
             }
         }
         
-        // Verificar se a coluna data_devolucao_real existe
+        
         String checkDevolucaoSql = "SHOW COLUMNS FROM locacao LIKE 'data_devolucao_real'";
         boolean devolucaoColumnExists = false;
         
@@ -150,7 +151,7 @@ public class LocacaoService {
         }
         
         if (!devolucaoColumnExists) {
-            // Adicionar coluna data_devolucao_real se não existir
+            
             String addDevolucaoSql = "ALTER TABLE locacao ADD COLUMN data_devolucao_real DATE NULL";
             try (Connection conn = ConexaoDAO.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(addDevolucaoSql)) {
@@ -160,7 +161,7 @@ public class LocacaoService {
     }
     
     public void atualizarStatusLocacoes() throws SQLException {
-        // Atualizar status baseado na data de devolução real
+        
         String updateSql = "UPDATE locacao SET status = CASE " +
                           "WHEN data_devolucao_real IS NOT NULL THEN 'DEVOLVIDA' " +
                           "ELSE 'ATIVA' END";
